@@ -115,6 +115,8 @@ extern const char* MAX_MULTICAST_LOCATORS;
 extern const char* TOTAL_PARTICIPANTS;
 extern const char* TOTAL_READERS;
 extern const char* TOTAL_WRITERS;
+extern const char* MAX_PROPERTIES;
+extern const char* MAX_USER_DATA;
 
 /// Publisher-subscriber attributes
 extern const char* TOPIC;

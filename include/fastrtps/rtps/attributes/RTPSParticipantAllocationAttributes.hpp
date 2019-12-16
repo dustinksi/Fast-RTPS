@@ -62,6 +62,10 @@ struct RTPSParticipantAllocationAttributes
     ResourceLimitedContainerConfig readers;
     //! Defines the allocation behaviour for collections dependent on the total number of writers per participant.
     ResourceLimitedContainerConfig writers;
+    //! Defines the maximum number of properties in the local or remote participant
+    size_t max_properties = 0;
+    //! Defines the maximum number of user data in the local or remote participant
+    size_t max_user_data = 0;
 
     //! @return the allocation config for the total of readers in the system (participants * readers)
     ResourceLimitedContainerConfig total_readers() const
