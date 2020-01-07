@@ -117,6 +117,7 @@ extern const char* TOTAL_READERS;
 extern const char* TOTAL_WRITERS;
 extern const char* MAX_PROPERTIES;
 extern const char* MAX_USER_DATA;
+extern const char* MAX_PARTITIONS;
 
 /// Publisher-subscriber attributes
 extern const char* TOPIC;
