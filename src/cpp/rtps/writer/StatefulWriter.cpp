@@ -431,8 +431,6 @@ bool StatefulWriter::intraprocess_heartbeat(
     return returned_value;
 }
 
-
->>>>>>> intraprocess delivery ported to master
 bool StatefulWriter::change_removed_by_history(
         CacheChange_t* a_change)
 {

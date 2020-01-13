@@ -187,19 +187,21 @@ void StatelessWriter::unsent_change_added_to_history(
                 }
                 else
                 {
+                    for (ReaderLocator& it : matched_readers_)
+                    {
+                        if (it.is_local_reader())
+                        {
+                            intraprocess_delivery(change, it);
+                        }
+                    }
+
+                    if(there_are_remote_readers_ || !fixed_locators_.empty())
                     {
                         RTPSMessageGroup group(mp_RTPSParticipant, this, *this, max_blocking_time);
 
                         if (!group.add_data(*change, is_inline_qos_expected_))
                         {
                             logError(RTPS_WRITER, "Error sending change " << change->sequenceNumber);
-                        }
-                    }
-                    for (ReaderLocator& it : matched_readers_)
-                    {
-                        if (it.is_local_reader())
-                        {
-                            intraprocess_delivery(change, it);
                         }
                     }
                 }
