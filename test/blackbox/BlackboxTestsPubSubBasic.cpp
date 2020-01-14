@@ -286,6 +286,195 @@ TEST_P(PubSubBasic, PubSubAsReliableHelloworldMulticastDisabled)
     reader.block_for_all();
 }
 
+
+TEST_P(PubSubBasic, ReceivedDynamicDataWithNoSizeLimit)
+{
+    PubSubReader<HelloWorldType> reader(TEST_TOPIC_NAME);
+    PubSubWriter<HelloWorldType> writer(TEST_TOPIC_NAME);
+
+    PropertyPolicy property_policy;
+    property_policy.properties().emplace_back(Property("propertyname", "propertyvalue"));
+    property_policy.properties().back().propagate(true);
+    writer.history_depth(100)
+          .entity_property_policy(property_policy)
+          .partition("A").partition("B").partition("C")
+          .userData({'a', 'b', 'c', 'd'}).init();
+
+
+    ASSERT_TRUE(writer.isInitialized());
+
+    reader.history_depth(100)
+          .partition("A")
+          .reliability(eprosima::fastrtps::RELIABLE_RELIABILITY_QOS).init();
+
+    ASSERT_TRUE(reader.isInitialized());
+
+    reader.wait_discovery(std::chrono::seconds(3));
+    writer.wait_discovery(std::chrono::seconds(3));
+
+    auto data = default_helloworld_data_generator();
+
+    reader.startReception(data);
+
+    // Send data
+    writer.send(data);
+    // In this test all data should be sent.
+    ASSERT_TRUE(data.empty());
+    // Block reader until reception finished or timeout.
+    reader.block_for_all();
+}
+
+TEST_P(PubSubBasic, ReceivedDynamicDataWithinSizeLimit)
+{
+    PubSubReader<HelloWorldType> reader(TEST_TOPIC_NAME);
+    PubSubWriter<HelloWorldType> writer(TEST_TOPIC_NAME);
+
+    PropertyPolicy property_policy;
+    property_policy.properties().emplace_back(Property("propertyname", "propertyvalue"));
+    property_policy.properties().back().propagate(true);
+    writer.history_depth(100)
+          .entity_property_policy(property_policy)
+          .partition("A").partition("B").partition("C")
+          .userData({'a', 'b', 'c', 'd'}).init();
+
+
+    ASSERT_TRUE(writer.isInitialized());
+
+    const std::string xml =
+            R"(<profiles>
+                <participant><rtps>
+                    <allocation>
+                        <max_properties> 100 </max_properties>
+                        <max_user_data> 8 </max_user_data>
+                        <max_partitions> 28 </max_partitions>
+                    </allocation>
+                </rtps></participant>
+            </profiles>)";
+
+    reader.load_participant_attr(xml)
+          .history_depth(100)
+          .partition("A")
+          .reliability(eprosima::fastrtps::RELIABLE_RELIABILITY_QOS).init();
+
+    ASSERT_TRUE(reader.isInitialized());
+
+    reader.wait_discovery(std::chrono::seconds(3));
+    writer.wait_discovery(std::chrono::seconds(3));
+
+    auto data = default_helloworld_data_generator();
+
+    reader.startReception(data);
+
+    // Send data
+    writer.send(data);
+    // In this test all data should be sent.
+    ASSERT_TRUE(data.empty());
+    // Block reader until reception finished or timeout.
+    reader.block_for_all();
+}
+
+TEST_P(PubSubBasic, ReceivedUserDataExceedsSizeLimit)
+{
+    PubSubReader<HelloWorldType> reader(TEST_TOPIC_NAME);
+    PubSubWriter<HelloWorldType> writer(TEST_TOPIC_NAME);
+
+    writer.history_depth(100)
+          .userData({'a', 'b', 'c', 'd', 'e', 'f'}).init();
+
+    ASSERT_TRUE(writer.isInitialized());
+
+    const std::string xml =
+            R"(<profiles>
+                <participant><rtps>
+                    <allocation>
+                        <max_user_data> 8 </max_user_data>
+                    </allocation>
+                </rtps></participant>
+            </profiles>)";
+
+    reader.load_participant_attr(xml)
+          .history_depth(100)
+          .reliability(eprosima::fastrtps::RELIABLE_RELIABILITY_QOS).init();
+
+    ASSERT_TRUE(reader.isInitialized());
+
+    reader.wait_discovery(std::chrono::seconds(3));
+    writer.wait_discovery(std::chrono::seconds(3));
+
+    ASSERT_FALSE(writer.is_matched());
+    ASSERT_FALSE(reader.is_matched());
+}
+
+
+TEST_P(PubSubBasic, ReceivedPropertiesDataExceedsSizeLimit)
+{
+    PubSubReader<HelloWorldType> reader(TEST_TOPIC_NAME);
+    PubSubWriter<HelloWorldType> writer(TEST_TOPIC_NAME);
+
+    PropertyPolicy property_policy;
+    property_policy.properties().emplace_back(Property("propertyname", "propertyvalue"));
+    property_policy.properties().back().propagate(true);
+    writer.history_depth(100)
+          .property_policy(property_policy).init();
+
+    ASSERT_TRUE(writer.isInitialized());
+
+    const std::string xml =
+            R"(<profiles>
+                <participant><rtps>
+                    <allocation>
+                        <max_properties> 8 </max_properties>
+                    </allocation>
+                </rtps></participant>
+            </profiles>)";
+
+    reader.load_participant_attr(xml)
+          .history_depth(100)
+          .reliability(eprosima::fastrtps::RELIABLE_RELIABILITY_QOS).init();
+
+    ASSERT_TRUE(reader.isInitialized());
+
+    reader.wait_discovery(std::chrono::seconds(3));
+    writer.wait_discovery(std::chrono::seconds(3));
+
+    ASSERT_FALSE(writer.is_matched());
+    ASSERT_FALSE(reader.is_matched());
+}
+
+TEST_P(PubSubBasic, ReceivedPartitionDataExceedsSizeLimit)
+{
+    PubSubReader<HelloWorldType> reader(TEST_TOPIC_NAME);
+    PubSubWriter<HelloWorldType> writer(TEST_TOPIC_NAME);
+
+    writer.history_depth(100)
+          .partition("A").partition("B").partition("C")
+          .init();
+
+    ASSERT_TRUE(writer.isInitialized());
+
+    const std::string xml =
+            R"(<profiles>
+                <participant><rtps>
+                    <allocation>
+                        <max_partitions> 20 </max_partitions>
+                    </allocation>
+                </rtps></participant>
+            </profiles>)";
+
+    reader.load_participant_attr(xml)
+          .history_depth(100)
+          .partition("A")
+          .reliability(eprosima::fastrtps::RELIABLE_RELIABILITY_QOS).init();
+
+    ASSERT_TRUE(reader.isInitialized());
+
+    reader.wait_discovery(std::chrono::seconds(3));
+    writer.wait_discovery(std::chrono::seconds(3));
+
+    ASSERT_FALSE(writer.is_matched());
+    ASSERT_FALSE(reader.is_matched());
+}
+
 INSTANTIATE_TEST_CASE_P(PubSubBasic,
         PubSubBasic,
         testing::Values(false, true),
