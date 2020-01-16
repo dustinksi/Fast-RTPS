@@ -176,7 +176,7 @@ ThroughputPublisher::ThroughputPublisher(
         // Add members to the struct.
         struct_type_builder->add_member(0, "seqnum", DynamicTypeBuilderFactory::get_instance()->create_uint32_type());
         struct_type_builder->add_member(1, "data", DynamicTypeBuilderFactory::get_instance()->create_sequence_builder(
-                DynamicTypeBuilderFactory::get_instance()->create_byte_type(), LENGTH_UNLIMITED));
+                DynamicTypeBuilderFactory::get_instance()->create_byte_type(), ::dds::core::LENGTH_UNLIMITED));
         struct_type_builder->set_name("ThroughputType");
         dynamic_type_ = struct_type_builder->build();
         dynamic_pub_sub_type_.SetDynamicType(dynamic_type_);
